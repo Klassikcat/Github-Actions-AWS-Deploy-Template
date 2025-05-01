@@ -1,0 +1,13 @@
+{
+    "image":"mcr.microsoft.com/devcontainers/base:ubuntu",
+    "postStartCommand": "post-start",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hashicorp.terraform",
+                "github.vscode-github-actions",
+                "github.vscode-pull-request-github"
+            ]
+        }
+    }
+}

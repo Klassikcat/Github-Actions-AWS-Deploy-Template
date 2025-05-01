@@ -1,0 +1,91 @@
+name: Example full workflow for Build and Deploy Vector Aggregator and Server
+on:
+    workflow_dispatch:
+        inputs:
+            stage:
+                type: choice
+                required: true
+                description: "The stage to deploy to"
+                options:
+                    - dev
+                    - prod
+            ACCOUNT_ID:
+                type: string
+                required: true
+                description: "The account ID to deploy to"
+            BUILD_ROLE_TO_ASSUME:
+                type: string
+                required: true
+                description: "The role to assume for build"
+            DEPLOY_ROLE_TO_ASSUME:
+                type: string
+                required: true
+                description: "The role to assume for deploy"
+            CANCEL_ROLE_TO_ASSUME:
+                type: string
+                required: true
+                description: "The role to assume for cancel"
+env:
+    CODE_DEPLOY_APPLICATION_NAME: example-codedeploy-application
+    DEPLOYMENT_GROUP_NAME: example-deployment-group
+permissions:
+    contents: read
+    packages: write
+    actions: write
+    id-token: write
+jobs:
+    build_aggregator:
+        uses: Klassikcat/Github-Actions-AWS-Deploy-Template/.github/workflows/build.yaml@main
+        with:
+            AWS_REGION: ap-northeast-2
+            AWS_ACCOUNT_ID: ${{ inputs.ACCOUNT_ID }}
+            ECR_ROLE_TO_ASSUME: ${{ inputs.BUILD_ROLE_TO_ASSUME }}
+            DOCKERFILE_PATH: Dockerfiles/Dockerfile
+            DOCKERFILE_CONTEXT: .
+            ECR_REPO_NAME: example-ecr-repo
+            BUILD_ARGS: |
+                BASE_IMG_TAG=timberio/vector:nightly-debian
+    build_server:
+        uses: Klassikcat/Github-Actions-AWS-Deploy-Template/.github/workflows/build.yaml@main
+        with:
+            AWS_REGION: ap-northeast-2
+            AWS_ACCOUNT_ID: ${{ inputs.ACCOUNT_ID }}
+            ECR_ROLE_TO_ASSUME: ${{ inputs.BUILD_ROLE_TO_ASSUME }}
+            DOCKERFILE_PATH: Dockerfiles/Dockerfile
+            DOCKERFILE_CONTEXT: .
+            ECR_REPO_NAME: example-ecr-repo
+            BUILD_ARGS: |
+                BASE_IMG_TAG=nginx:latest
+    deploy_server:
+        needs:
+            - build_server
+        uses: Klassikcat/Github-Actions-AWS-Deploy-Template/.github/workflows/deploy.yaml@main
+        with:
+            container_name: "example-container"
+            image_url: ${{ needs.build_server.outputs.ECR_REPO_URL }}:${{ github.sha }}
+            task_definition_path: .aws/batch/${{ inputs.stage }}/task_definition.json
+            cluster_name: example-cluster
+            service_name: example-service
+            aws_role_to_assume: ${{ inputs.DEPLOY_ROLE_TO_ASSUME }}
+            use_codedeploy: true
+    deploy_aggregator:
+        needs:
+            - build_aggregator
+        uses: Klassikcat/Github-Actions-AWS-Deploy-Template/.github/workflows/deploy.yaml@main
+        with:
+            container_name: "example-container"
+            image_url: ${{ needs.build_aggregator.outputs.ECR_REPO_URL }}:${{ github.sha }}
+            task_definition_path: .aws/batch/${{ inputs.stage }}/task_definition.json
+            cluster_name: example-cluster
+            service_name: example-service
+            aws_role_to_assume: ${{ inputs.DEPLOY_ROLE_TO_ASSUME }}
+            use_codedeploy: true
+    cancel_web_codedeploy_if_workflow_canceled:
+        if: failure()
+        uses: Klassikcat/Github-Actions-AWS-Deploy-Template/.github/workflows/cancel.yaml@main
+        with:
+            ACCOUNT_ID: ${{ inputs.ACCOUNT_ID }}
+            deployment_group_name: example-deployment-group
+            application_name: example-codedeploy-application
+            ROLE_TO_ASSUME: ${{ inputs.CANCEL_ROLE_TO_ASSUME }}
+# Slack send action can be added here.

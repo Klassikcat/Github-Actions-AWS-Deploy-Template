@@ -1,0 +1,188 @@
+name: Deploy Server using CodeDeploy
+on:
+  workflow_dispatch:
+    inputs:
+      container_name:
+        description: "name of container"
+        type: string
+        required: true
+      image_url:
+        description: "image url"
+        type: string
+        required: true
+      task_definition_path:
+        description: "Task defintion relative path. eg: ./.aws/task-definition.json"
+        type: string
+        required: true
+      cluster_name:
+        description: "Cluster name of the ECS cluster"
+        type: string
+        required: true
+      service_name:
+        description: "Service name of the ECS service"
+        type: string
+        required: true
+      aws_role_to_assume:
+        description: "AWS role to assume"
+        type: string
+        required: true
+      use_codedeploy:
+        description: "Use CodeDeploy for deployment"
+        type: boolean
+        required: true
+      codedeploy_appspec_path:
+        description: "Path to the CodeDeploy appspec file"
+        type: string
+        required: false
+      codedeploy_application_name:
+        type: string
+        required: false
+        description: "Name of the CodeDeploy application"
+      codedeploy_deployment_group_name:
+        type: string
+        required: false
+        description: "Name of the CodeDeploy deployment group"
+
+  workflow_call:
+    inputs:
+      container_name:
+        description: "name of container"
+        type: string
+        required: true
+      image_url:
+        description: "image url"
+        type: string
+        required: true
+      task_definition_path:
+        description: "Task defintion relative path. eg: ./.aws/task-definition.json"
+        type: string
+        required: true
+      cluster_name:
+        description: "Cluster name of the ECS cluster"
+        type: string
+        required: true
+      service_name:
+        description: "Service name of the ECS service"
+        type: string
+        required: true
+      aws_role_to_assume:
+        description: "AWS role to assume"
+        type: string
+        required: true
+      use_codedeploy:
+        description: "Use CodeDeploy for deployment"
+        type: boolean
+        required: true
+      codedeploy_appspec_path:
+        description: "Path to the CodeDeploy appspec file"
+        type: string
+        required: false
+      codedeploy_application_name:
+        type: string
+        required: false
+        description: "Name of the CodeDeploy application"
+      codedeploy_deployment_group_name:
+        type: string
+        required: false
+        description: "Name of the CodeDeploy deployment group"
+
+env:
+  AWS_AUDIENCE: "sts.amazonaws.com"
+permissions:
+  contents: read
+  packages: write
+  actions: write
+  id-token: write
+jobs:
+  invoke_codedeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          sparse-checkout: |
+            .github/
+            .envs/
+            .aws/
+            scripts/
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          arch: amd64
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ inputs.aws_role_to_assume }}
+          audience: ${{ env.AWS_AUDIENCE }}
+          aws-region: ap-northeast-2
+      - name: Render Task Defintion
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render_task_definition
+        with:
+          task-definition: ${{ inputs.task_definition_path }}
+          container-name: ${{ inputs.container_name }}
+          image: ${{ inputs.image_url }}
+      - name: Get latest deployment ID
+        id: get_deployment
+        if: ${{ inputs.use_codedeploy }}
+        run: |
+          DEPLOYMENT_ID=$(aws deploy list-deployments \
+            --application-name "${{ inputs.codedeploy_application_name }}" \
+            --deployment-group-name "${{ inputs.codedeploy_deployment_group_name }}" \
+            --query 'deployments[0]' \
+            --output text)
+          if [ "$DEPLOYMENT_ID" = "None" ]; then
+            echo "No deployment found for this deployment group."
+            echo "deployment_id=" >> $GITHUB_OUTPUT
+          else
+            echo "Found deployment ID: $DEPLOYMENT_ID"
+            echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          fi
+      - name: Wait for deployment to complete
+        if: ${{ inputs.use_codedeploy && steps.get_deployment.outputs.deployment_id != '' }}
+        run: |
+          DEPLOYMENT_ID="${{ steps.get_deployment.outputs.deployment_id }}"
+
+          echo "Waiting for deployment $DEPLOYMENT_ID to finish..."
+
+          while true; do
+            STATUS=$(aws deploy get-deployment \
+              --deployment-id "$DEPLOYMENT_ID" \
+              --query 'deploymentInfo.status' \
+              --output text)
+
+            echo "Current status: $STATUS"
+
+            if [[ "$STATUS" == "Succeeded" ]]; then
+              echo "✅ Deployment has succeeded before. Continue to deploy."
+              break
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Stopped" ]]; then
+              echo "❌ Deployment failed or was stopped. Continue to deploy."
+              break
+            elif [[ "$STATUS" == "InProgress" || "$STATUS" == "Queued" || "$STATUS" == "Created" ]]; then
+              echo "⏳ Still in progress... checking again in 5 seconds."
+              sleep 5
+            else
+              echo "⚠️ Unknown deployment status: $STATUS"
+              exit 1
+            fi
+          done
+      - name: Deploy Server with CodeDeploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
+        if: ${{ inputs.use_codedeploy }}
+        with:
+          service: ${{ inputs.service_name }}
+          cluster: ${{ inputs.cluster_name }}
+          wait-for-service-stability: true
+          task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
+          codedeploy-appspec: ${{ inputs.codedeploy_appspec_path }}
+          codedeploy-application: ${{ inputs.codedeploy_application_name }}
+          codedeploy-deployment-group: ${{ inputs.codedeploy_deployment_group_name }}
+      - name: Deploy Server without CodeDeploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
+        if: ${{ !inputs.use_codedeploy }}
+        with:
+          service: ${{ inputs.service_name }}
+          cluster: ${{ inputs.cluster_name }}
+          task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
+          wait-for-service-stability: true

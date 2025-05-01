@@ -1,0 +1,99 @@
+name: Build Workflow
+on:
+  workflow_call:
+    inputs:
+      AWS_REGION:
+        description: "AWS Target Region"
+        required: true
+        type: string
+      AWS_ACCOUNT_ID:
+        description: "AWS Account ID"
+        required: true
+        type: string
+      DOCKERFILE_PATH:
+        description: "Dockerfile path"
+        required: false
+        type: string
+        default: "./Dockerfile"
+      DOCKERFILE_CONTEXT:
+        description: "Dockerfile context path"
+        required: false
+        type: string
+        default: "."
+      ECR_ROLE_TO_ASSUME:
+        description: "Role to assume"
+        required: true
+        type: string
+      ECR_REPO_NAME:
+        description: "ECR Repo name"
+        required: true
+        type: string
+      BUILD_ARGS:
+        description: "arguemtns for build"
+        type: string
+      MULTI_ARCH:
+        description: "build multi-arch image"
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      ECR_REPO_URL:
+        description: "ECR Repo name"
+        value: ${{ jobs.build.outputs.ECR_REPO_URL }}
+env:
+  AWS_AUDIENCE: "sts.amazonaws.com"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      ECR_REPO_URL: ${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+      id-token: write
+    steps:
+      - name: Set multi-arch if multi-arch is true
+        id: arch
+        run: |
+          if [ ${{ inputs.MULTI_ARCH }} = "true" ]; then
+            echo "PLATFORMS=linux/arm64,linux/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "PLATFORMS=linux/arm64" >> $GITHUB_OUTPUT
+          fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: install docker and buildx plugin
+        uses: docker/setup-buildx-action@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: ${{ env.AWS_AUDIENCE }}
+          role-to-assume: ${{ inputs.ECR_ROLE_TO_ASSUME }}
+          aws-region: ${{ inputs.AWS_REGION }}
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: "true"
+      - name: Set Repo name and ECR Repo name
+        id: set_repo_name
+        run: |
+          echo "ECR_REPO_NAME=${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.ECR_REPO_NAME }}" >> $GITHUB_OUTPUT
+      - name: Build and push
+        id: build_and_push
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ inputs.DOCKERFILE_CONTEXT }}
+          file: ${{ inputs.DOCKERFILE_PATH }}
+          push: true
+          cache-from: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=true,oci-mediatypes=true
+          cache-to: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=true,oci-mediatypes=true
+          platforms: ${{ steps.arch.outputs.PLATFORMS }}
+          tags: ${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:${{ github.sha }}
+          build-args: |
+            ${{ inputs.BUILD_ARGS }}

@@ -1,0 +1,57 @@
+api:
+  enabled: true
+  address: 0.0.0.0:8086
+
+sources:
+  vector_source:
+    type: vector
+    address: 0.0.0.0:9000
+
+transforms:
+  parser:
+    type: remap
+    inputs: ["vector_source"]
+    source: |
+      .log = parse_json!(.message).log
+      if match!(.log, r'(?P<remote_addr>\d+\.\d+\.\d+\.\d+) - (?P<remote_user>.+) \[(?P<timestamp_not_parsed>.+)\] "(?P<request>.+)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>.+)" "(?P<http_user_agent>.+)"') {
+          .type = "nginx_access"
+      }
+  router:
+    type: route
+    inputs: ["parser"]
+    route:
+      nginx_access: .type == "nginx_access"
+      etc_logs: '!exists(.type) || .type == null'
+sinks:
+  nginx_access_logs:
+    type: elasticsearch
+    inputs: [router.nginx_access]
+    endpoints: ["${ELASTICSEARCH_ENDPOINT:?err}"]
+    auth:
+      strategy: "basic"
+      user: "${ELASTICSEARCH_USERNAME:?err}"
+      password: "${ELASTICSEARCH_PASSWORD:?err}"
+    bulk:
+      index: "${ELASTICSEARCH_NGINX_ACCESS_INDEX:?err}"
+  etc_logs:
+    type: elasticsearch
+    inputs: [router.etc_logs]
+    endpoints: ["${ELASTICSEARCH_ENDPOINT:?err}"]
+    auth:
+      strategy: "basic"
+      user: "${ELASTICSEARCH_USERNAME:?err}"
+      password: "${ELASTICSEARCH_PASSWORD:?err}"
+    bulk:
+      index: "${ELASTICSEARCH_ETC_LOGS_INDEX:?err}"
+  athena:
+    type: "aws_s3"
+    inputs:
+      - "router.nginx_access"
+      - "router.etc_logs"
+    bucket: "${AWS_S3_BUCKET:?err}"
+    region: "${AWS_REGION:?err}"
+    compression: gzip
+    auth:
+      assume_role: "${AWS_ASSUME_ROLE_ARN:?err}"
+    encoding:
+      codec: json
