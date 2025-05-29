@@ -44,6 +44,10 @@ on:
                 description: "Capabilities to deploy with"
                 type: string
                 default: "CAPABILITY_IAM"
+            ref:
+                description: "Ref to checkout"
+                type: string
+                default: "main"
 permissions:
   contents: read
   packages: write
@@ -58,6 +62,11 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: dcarbone/install-jq-action@v3.0.1
+        - uses: actions/setup-python@v3
+        - uses: aws-actions/setup-sam@v1
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ inputs.ref }}
         - uses: aws-actions/configure-aws-credentials@v2
           with:
             role-to-assume: ${{ inputs.ROLE_TO_ASSUME }}
