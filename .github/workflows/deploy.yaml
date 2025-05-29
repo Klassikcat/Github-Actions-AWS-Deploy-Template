@@ -91,7 +91,7 @@ env:
 permissions:
   contents: read
   packages: write
-  actions: write
+  actions: write # TODO: Create Deployment Queue or Cancelation
   id-token: write
 jobs:
   invoke_codedeploy:

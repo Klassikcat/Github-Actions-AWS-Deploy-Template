@@ -50,7 +50,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      actions: write
+      actions: read
       id-token: write
     steps:
       - name: Set multi-arch if multi-arch is true

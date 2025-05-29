@@ -1,33 +1,9 @@
 #!/bin/bash
 
-install_vector() {
-    curl --proto '=https' --tlsv1.2 -sSfL https://sh.vector.dev | bash -s -- -y
-}
-
-install_github_cli() {
-    (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
-	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
-        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-	&& sudo apt update \
-	&& sudo apt install gh -y
-}
-
-install_terraform() {
-    sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
-    wget -O- https://apt.releases.hashicorp.com/gpg | \
-    gpg --dearmor | \
-    sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
-    gpg --no-default-keyring \
-    --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
-    --fingerprint
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
-    https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
-    sudo tee /etc/apt/sources.list.d/hashicorp.list
-    sudo apt update
-    sudo apt-get install terraform
+install_aws_cli() {
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
 }
 
 set_default_editor() {
@@ -39,9 +15,7 @@ set_default_editor() {
 }
 
 main() {
-    install_vector
-    install_github_cli
-    install_terraform
+    install_aws_cli
     set_default_editor
 }
 

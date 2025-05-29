@@ -1,12 +1,23 @@
 {
-    "image":"mcr.microsoft.com/devcontainers/base:ubuntu",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".",
+        "args": {
+            "PYTHON_VERSION": "3.11"
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
     "postStartCommand": "/bin/bash .devcontainer/post-start",
     "customizations": {
         "vscode": {
             "extensions": [
                 "hashicorp.terraform",
                 "github.vscode-github-actions",
-                "github.vscode-pull-request-github"
+                "github.vscode-pull-request-github",
+                "ms-azuretools.vscode-docker",
+                "amazonwebservices.aws-toolkit-vscode"
             ]
         }
     }

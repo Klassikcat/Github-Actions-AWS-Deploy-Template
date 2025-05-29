@@ -44,6 +44,11 @@ on:
                 description: "Capabilities to deploy with"
                 type: string
                 default: "CAPABILITY_IAM"
+permissions:
+  contents: read
+  packages: write
+  actions: read
+  id-token: write
 jobs:
     deploy_lambda:
         name: ${{ matrix.name }}-deploy
