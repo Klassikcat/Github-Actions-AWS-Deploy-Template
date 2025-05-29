@@ -1,0 +1,71 @@
+# This workflow is used to deploy lambda functions to AWS.
+# This assumes that the lambda functions are in $PREFIX/$LAMBDA_FUNCTION_NAME/
+# And Template file is in $PREFIX/$LAMBDA_FUNCTION_NAME/template.yaml
+# Example:
+# PREFIX = src/
+# src/
+# ├── lambda_function_name/
+# │   ├── template.yaml
+# │   └── lambda_handler.py
+# │   └── samconfig.toml
+# └── lambda_function_name_2/
+#     ├── template.yaml
+#     └── lambda_handler.py
+#     └── samconfig.toml
+# 
+on:
+    workflow_call:
+        inputs:
+            ACCOUNT_ID:
+                required: true
+                type: string
+            REGION:
+                type: string
+                default: "ap-northeast-2"
+            ROLE_TO_ASSUME:
+                required: true
+                type: string
+            lambda_function_names:
+                required: true
+                description: "Comma separated list of lambda function names"
+                type: string
+            template_file_path:
+                description: "Path to the template file"
+                type: string
+                default: "template.yaml"
+            prefix:
+                description: "Path that lambda functions are in"
+                type: string
+                default: "src"
+            ENV:
+                description: "Environment to deploy to"
+                type: string
+            capabilities:
+                description: "Capabilities to deploy with"
+                type: string
+                default: "CAPABILITY_IAM"
+jobs:
+    deploy_lambda:
+        name: ${{ matrix.name }}-deploy
+        strategy:
+            matrix:
+                name: ${{ fromJson(inputs.lambda_function_names) }}
+        runs-on: ubuntu-latest
+        steps:
+        - uses: dcarbone/install-jq-action@v3.0.1
+        - uses: aws-actions/configure-aws-credentials@v2
+          with:
+            role-to-assume: ${{ inputs.ROLE_TO_ASSUME }}
+            audience: "sts.amazonaws.com"
+            aws-region: ${{ inputs.REGION }}
+        - run: |
+            echo "Deploying ${{ matrix.name }} to ${{ inputs.ENV }} in ${{ inputs.REGION }}/${{ inputs.ACCOUNT_ID }}"
+            cd ${{ inputs.prefix }}/${{ matrix.name }}
+            aws sam deploy \
+                --template-file ${{ inputs.template_file_path }} \
+                --stack-name ${{ matrix.name }}-${{ inputs.ENV }} \
+                --region ${{ inputs.REGION }} \
+                --capabilities ${{ inputs.capabilities }} \
+                --config-env ${{ inputs.ENV }} \
+                --no-confirm-changeset \
+                --no-fail-on-empty-changeset
