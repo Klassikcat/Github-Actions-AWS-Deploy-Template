@@ -24,7 +24,7 @@ jobs:
               id: find_changed_files
               run: |
                 # Get changed files and convert to JSON array
-                changed_files=$(git diff --name-only HEAD~2 | xargs -L1 dirname | sort -u | grep src | sed 's|src/||')
+                changed_files=$(git diff --name-only HEAD~2 | xargs -L1 dirname | sort -u | grep test/infra/functions | sed 's|test/infra/functions/||')
                 # Convert to JSON array format
                 json_array=$(echo "$changed_files" | jq -R -s -c 'split("\n")[:-1]')
                 echo "CHANGED_FILES=${json_array}" >> $GITHUB_OUTPUT
