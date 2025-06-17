@@ -1,4 +1,11 @@
 on:
+    workflow_dispatch:
+    push:
+        branches:
+            - develop
+            - dev
+            - main
+            - prod
 jobs:
     find_changed_files:
         runs-on: ubuntu-22.04
