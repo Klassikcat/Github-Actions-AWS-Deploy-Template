@@ -1,5 +1,5 @@
 version = 0.1
-[default.dev.parameters]
+[dev.deploy.parameters]
 resolve_s3 = true
 region = "ap-northeast-2"
 confirm_changeset = true
@@ -8,7 +8,7 @@ parameter_overrides = "FunctionName=\"serverless-test-func-2\""
 image_repositories = []
 stack_name = "serverless-test-func-2"
 s3_prefix = "serverless-test-func-2"
-[default.prod.parameters]
+[prod.deploy.parameters]
 resolve_s3 = true
 region = "ap-northeast-2"
 confirm_changeset = true

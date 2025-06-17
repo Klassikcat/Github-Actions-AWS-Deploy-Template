@@ -79,7 +79,6 @@ jobs:
                 --template-file ${{ inputs.template_file_path }} \
                 --stack-name ${{ matrix.name }}-${{ inputs.ENV }} \
                 --region ${{ inputs.REGION }} \
-                --capabilities ${{ inputs.capabilities }} \
                 --config-env ${{ inputs.ENV }} \
                 --no-confirm-changeset \
                 --no-fail-on-empty-changeset
