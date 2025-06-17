@@ -20,4 +20,4 @@ Resources:
         - CloudWatchFullAccess
       Environment:
         Variables:
-          TEST_ENV: test
+          TEST_ENV: tests

@@ -11,4 +11,4 @@ Resources:
       Role: arn:aws:iam::123456789012:role/lambda-role
       Environment:
         Variables:
-          TEST_ENV: test
+          TEST_ENV: tests
