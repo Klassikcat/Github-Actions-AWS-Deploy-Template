@@ -1,0 +1,23 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  FunctionName:
+    Type: String
+    Default: func1
+Resources:
+  Func1:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      CodeUri: ./app.py
+      Timeout: 300
+      MemorySize: 128
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+        - SecretsManagerReadWrite
+        - CloudWatchFullAccess
+      Environment:
+        Variables:
+          TEST_ENV: test

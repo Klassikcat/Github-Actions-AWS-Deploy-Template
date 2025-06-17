@@ -1,0 +1,14 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Func1:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      Runtime: python3.10
+      CodeUri: ./app.py
+      Timeout: 300
+      MemorySize: 128
+      Role: arn:aws:iam::123456789012:role/lambda-role
+      Environment:
+        Variables:
+          TEST_ENV: test

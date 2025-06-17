@@ -1,0 +1,56 @@
+on:
+jobs:
+    find_changed_files:
+        runs-on: ubuntu-22.04
+        outputs:
+            CHANGED_FILES: ${{ steps.find_changed_files.outputs.CHANGED_FILES }}
+            ROLE_TO_ASSUME: ${{ steps.set_role_to_assume.outputs.ROLE_TO_ASSUME }}
+            STAGE: ${{ steps.set_stage.outputs.STAGE }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Find Changed Files
+              id: find_changed_files
+              run: |
+                # Get changed files and convert to JSON array
+                changed_files=$(git diff --name-only HEAD~2 | xargs -L1 dirname | sort -u | grep src | sed 's|src/||')
+                # Convert to JSON array format
+                json_array=$(echo "$changed_files" | jq -R -s -c 'split("\n")[:-1]')
+                echo "CHANGED_FILES=${json_array}" >> $GITHUB_OUTPUT
+            - name: Set Stage
+              id: set_stage
+              run: |
+                case "${{ github.ref_name }}" in
+                  dev|develop)
+                    stage="dev"
+                    ;;
+                  main|prod|production)
+                    stage="prod"
+                    ;;
+                  *)
+                    stage="sandbox"
+                    ;;
+                esac
+                echo "STAGE=${stage}" >> $GITHUB_OUTPUT
+            - name: Set Role to Assume
+              id: set_role_to_assume
+              run: |
+                case "${{ github.ref_name }}" in
+                  dev|develop)
+                    role_to_assume="${{ vars.develop_role_to_assume }}"
+                    ;;
+                  main|prod|production)
+                    role_to_assume="${{ vars.prod_role_to_assume }}"
+                    ;;
+                  *)
+                    role_to_assume="${{ vars.develop_role_to_assume }}"
+                    ;;
+                esac
+                echo "ROLE_TO_ASSUME=${role_to_assume}" >> $GITHUB_OUTPUT
+    deploy_functions_on_push:
+        needs: find_changed_files
+        uses: dealertire-lab/Github-Actions-AWS-Deploy-Template/.github/workflows/deploy_lambda.yaml@main
+        if: ${{ needs.find_changed_files.outputs.CHANGED_FILES != '' }}
+        with:
+            ACCOUNT_ID: ${{ vars.account_id }}
+            ROLE_TO_ASSUME: ${{ needs.find_changed_files.outputs.ROLE_TO_ASSUME }}
+            LAMBDA_FUNCTION_NAMES: '${{ needs.find_changed_files.outputs.CHANGED_FILES }}'

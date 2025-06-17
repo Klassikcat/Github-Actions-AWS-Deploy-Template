@@ -1,0 +1,19 @@
+version = 0.1
+[default.staging.parameters]
+resolve_s3 = true
+region = "ap-northeast-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "FunctionName=\"serverless-test-func-1\""
+image_repositories = []
+stack_name = "serverless-test-func-1"
+s3_prefix = "serverless-test-func-1"
+[default.prod.parameters]
+resolve_s3 = true
+region = "ap-northeast-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "FunctionName=\"serverless-test-func-prod-1\""
+image_repositories = []
+stack_name = "serverless-test-func-prod-1"
+s3_prefix = "serverless-test-func-prod-1"
