@@ -55,7 +55,7 @@ jobs:
                 echo "ROLE_TO_ASSUME=${role_to_assume}" >> $GITHUB_OUTPUT
     deploy_functions_on_push:
         needs: find_changed_files
-        uses: dealertire-lab/Github-Actions-AWS-Deploy-Template/.github/workflows/deploy_lambda.yaml@main
+        uses: ./.github/workflows/deploy_lambda.yaml
         if: ${{ needs.find_changed_files.outputs.CHANGED_FILES != '' }}
         with:
             ACCOUNT_ID: ${{ vars.account_id }}
