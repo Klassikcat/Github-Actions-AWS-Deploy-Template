@@ -48,6 +48,10 @@ on:
                 description: "Ref to checkout"
                 type: string
                 default: "main"
+            samconfig_file_path:
+                description: "Path to the samconfig.toml file"
+                type: string
+                default: "samconfig.toml"
 permissions:
   contents: read
   packages: write
@@ -77,8 +81,8 @@ jobs:
             cd ${{ inputs.prefix }}/${{ matrix.name }}
             sam deploy \
                 --template-file ${{ inputs.template_file_path }} \
-                --stack-name ${{ matrix.name }}-${{ inputs.ENV }} \
                 --region ${{ inputs.REGION }} \
                 --config-env ${{ inputs.ENV }} \
+                --config-file ${{ inputs.samconfig_file_path }} \
                 --no-confirm-changeset \
                 --no-fail-on-empty-changeset
