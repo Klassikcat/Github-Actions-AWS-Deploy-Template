@@ -20,6 +20,8 @@ jobs:
             STAGE: ${{ steps.set_stage.outputs.STAGE }}
         steps:
             - uses: actions/checkout@v4
+              with:
+                fetch-depth: 4
             - name: Find Changed Files
               id: find_changed_files
               run: |
