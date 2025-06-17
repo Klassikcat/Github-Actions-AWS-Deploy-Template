@@ -8,7 +8,7 @@ on:
             - prod
 permissions:
     contents: read
-    actions: write
+    packages: write
     id-token: write
 jobs:
     find_changed_files:
