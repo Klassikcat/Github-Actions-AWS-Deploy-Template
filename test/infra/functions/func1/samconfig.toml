@@ -1,6 +1,7 @@
 version = 0.1
 [dev.deploy.parameters]
-resolve_s3 = true
+resolve_s3 = false
+s3_bucket = "gha-sam-bucket"
 region = "ap-northeast-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
@@ -9,7 +10,8 @@ image_repositories = []
 stack_name = "serverless-test-func-1"
 s3_prefix = "serverless-test-func-1"
 [prod.deploy.parameters]
-resolve_s3 = true
+resolve_s3 = false
+s3_bucket = "gha-sam-bucket"
 region = "ap-northeast-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
