@@ -6,6 +6,10 @@ on:
             - dev
             - main
             - prod
+permissions:
+    contents: read
+    actions: write
+    id-token: write
 jobs:
     find_changed_files:
         runs-on: ubuntu-22.04
