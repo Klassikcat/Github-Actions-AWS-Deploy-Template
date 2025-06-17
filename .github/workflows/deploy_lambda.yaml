@@ -75,7 +75,7 @@ jobs:
         - run: |
             echo "Deploying ${{ matrix.name }} to ${{ inputs.ENV }} in ${{ inputs.REGION }}/${{ inputs.ACCOUNT_ID }}"
             cd ${{ inputs.prefix }}/${{ matrix.name }}
-            aws sam deploy \
+            sam deploy \
                 --template-file ${{ inputs.template_file_path }} \
                 --stack-name ${{ matrix.name }}-${{ inputs.ENV }} \
                 --region ${{ inputs.REGION }} \

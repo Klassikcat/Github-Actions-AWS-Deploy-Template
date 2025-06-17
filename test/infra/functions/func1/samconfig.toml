@@ -1,5 +1,5 @@
 version = 0.1
-[default.staging.parameters]
+[default.dev.parameters]
 resolve_s3 = true
 region = "ap-northeast-2"
 confirm_changeset = true

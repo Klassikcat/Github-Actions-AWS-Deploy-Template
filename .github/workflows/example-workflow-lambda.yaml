@@ -68,4 +68,5 @@ jobs:
             ACCOUNT_ID: ${{ vars.account_id }}
             ROLE_TO_ASSUME: ${{ needs.find_changed_files.outputs.ROLE_TO_ASSUME }}
             LAMBDA_FUNCTION_NAMES: '${{ needs.find_changed_files.outputs.CHANGED_FILES }}'
+            ENV: ${{ needs.find_changed_files.outputs.STAGE }}
             prefix: test/infra/functions
