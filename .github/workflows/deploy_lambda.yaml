@@ -44,10 +44,6 @@ on:
                 description: "Capabilities to deploy with"
                 type: string
                 default: "CAPABILITY_IAM"
-            ref:
-                description: "Ref to checkout"
-                type: string
-                default: "main"
             samconfig_file_path:
                 description: "Path to the samconfig.toml file"
                 type: string
@@ -70,7 +66,6 @@ jobs:
         - uses: aws-actions/setup-sam@v1
         - uses: actions/checkout@v4
           with:
-            ref: ${{ inputs.ref }}
             sparse-checkout: ${{ inputs.prefix }}/${{ matrix.name }}
         - uses: aws-actions/configure-aws-credentials@v2
           with:
