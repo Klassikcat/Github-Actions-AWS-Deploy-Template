@@ -1,11 +1,5 @@
 #!/bin/bash
 
-install_aws_cli() {
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    sudo ./aws/install
-}
-
 set_default_editor() {
     sudo apt-get install vim -y
     git config --global core.editor 'vim'

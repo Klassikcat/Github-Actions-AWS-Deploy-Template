@@ -57,6 +57,7 @@ jobs:
     deploy_lambda:
         name: ${{ matrix.name }}-deploy
         strategy:
+            fail-fast: false
             matrix:
                 name: ${{ fromJson(inputs.lambda_function_names) }}
         runs-on: ubuntu-latest
