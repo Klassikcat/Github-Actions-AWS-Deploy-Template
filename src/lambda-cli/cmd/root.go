@@ -5,10 +5,12 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "poorserverless",
-	Short: "PoorServerless - A simple serverless function generator",
-	Long: `PoorServerless is a CLI tool that helps you create serverless functions
-with templates and configuration files for AWS Lambda deployment.`,
+	Use:   "lambda-cli",
+	Short: "Lambda CLI - A modern serverless function generator",
+	Long: `Lambda CLI is a tool that helps you create serverless functions
+with spec.yaml configuration and AWS CDK deployment infrastructure.
+
+Based on GEMINI.md specification for simplified Lambda deployment.`,
 }
 
 func Execute() error {

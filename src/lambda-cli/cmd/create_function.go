@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"poorserverless/internal/generator"
+	"lambda-cli/internal/generator"
 
 	"github.com/spf13/cobra"
 )

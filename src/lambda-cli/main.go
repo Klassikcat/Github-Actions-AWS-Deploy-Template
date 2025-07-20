@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"lambda-cli/cmd"
 	"os"
-	"poorserverless/cmd"
 )
 
 func main() {

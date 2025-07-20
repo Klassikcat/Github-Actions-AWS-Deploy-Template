@@ -1,4 +1,4 @@
-module poorserverless
+module lambda-cli
 
 go 1.21
 

@@ -7,6 +7,30 @@ import (
 	"strings"
 )
 
+// Spec represents the spec.yaml structure according to GEMINI.md
+type Spec struct {
+	Name        string                 `yaml:"name"`
+	Transforms  []map[string]any       `yaml:"transforms,omitempty"`
+	Spec        SpecDetails            `yaml:"spec"`
+	Layers      []string               `yaml:"layers,omitempty"`
+	Roles       []string               `yaml:"roles,omitempty"`
+	Policies    []string               `yaml:"policies,omitempty"`
+	Permissions []Permission           `yaml:"permissions,omitempty"`
+	Envs        map[string]interface{} `yaml:"envs,omitempty"`
+}
+
+type SpecDetails struct {
+	Runtime string `yaml:"runtime"`
+	Memory  int    `yaml:"memory"`
+	Timeout int    `yaml:"timeout"`
+}
+
+type Permission struct {
+	Name      string `yaml:"name"`
+	Principal string `yaml:"principal"`
+	SourceArn string `yaml:"source-arn"`
+}
+
 type Generator struct {
 	Runtime      string
 	FunctionName string
@@ -84,8 +108,30 @@ def lambda_handler(event, context):
 		return err
 	}
 
+	// Create spec.yaml according to GEMINI.md specification
+	specContent := fmt.Sprintf(`name: %s
+spec:
+  runtime: python3.11
+  memory: 512
+  timeout: 30
+layers: []
+policies:
+  - AWSLambdaBasicExecutionRole
+permissions:
+  - name: LambdaInvokePermission
+    principal: apigateway.amazonaws.com
+    source-arn: "api-gateway-resource-arn/*/GET/*"
+envs:
+  FUNCTION_NAME: %s
+  TZ: Asia/Seoul
+`, g.FunctionName, g.FunctionName)
+
+	if err := g.writeFile("spec.yaml", specContent); err != nil {
+		return err
+	}
+
 	// Create CDK infrastructure
-	return g.generateCDKInfrastructure("python3.9", "app.lambda_handler")
+	return g.generateCDKInfrastructure("python3.11", "app.lambda_handler")
 }
 
 func (g *Generator) generateNodeJS() error {
