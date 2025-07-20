@@ -39,3 +39,5 @@ terraform.rc
 
 # ignore env files
 .env
+src/lambda-cli/lambda-cli
+src/lambda-cli/test-output
