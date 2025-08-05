@@ -50,8 +50,8 @@ on:
                 default: "samconfig.toml"
             use_ecr_repo:
                 description: Optional. If you use docker-based lambda function, provide this value. Otherwise, SAM tries to build using zip file.
-                type: string
-                required: false
+                type: boolean
+                default: false
 permissions:
   contents: read
   packages: write
