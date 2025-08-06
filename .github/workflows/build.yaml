@@ -91,8 +91,8 @@ jobs:
           context: ${{ inputs.DOCKERFILE_CONTEXT }}
           file: ${{ inputs.DOCKERFILE_PATH }}
           push: true
-          cache-from: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=true
-          cache-to: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=true
+          cache-from: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=false
+          cache-to: type=registry,mode=max,ref=${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:cache,image-manifest=false
           platforms: ${{ steps.arch.outputs.PLATFORMS }}
           tags: ${{ steps.set_repo_name.outputs.ECR_REPO_NAME }}:${{ github.sha }}
           build-args: |
