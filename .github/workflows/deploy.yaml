@@ -88,9 +88,17 @@ jobs:
           image: ${{ inputs.sidecar_image_url }}
       - name: Deploy Server without CodeDeploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
-        if: ${{ !inputs.use_codedeploy }}
+        if: ${{ !inputs.use_sidecar }}
         with:
           service: ${{ inputs.service_name }}
           cluster: ${{ inputs.cluster_name }}
           task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
+          wait-for-service-stability: true
+      - name: Deploy Server without CodeDeploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
+        if: ${{ inputs.use_sidecar }}
+        with:
+          service: ${{ inputs.service_name }}
+          cluster: ${{ inputs.cluster_name }}
+          task-definition: ${{ steps.render_sidecar_task_definition.outputs.task-definition }}
           wait-for-service-stability: true

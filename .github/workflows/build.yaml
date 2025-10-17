@@ -86,7 +86,7 @@ jobs:
           echo "ECR_REPO_NAME=${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.ECR_REPO_NAME }}" >> $GITHUB_OUTPUT
       - name: Build and push
         id: build_and_push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.DOCKERFILE_CONTEXT }}
           file: ${{ inputs.DOCKERFILE_PATH }}
