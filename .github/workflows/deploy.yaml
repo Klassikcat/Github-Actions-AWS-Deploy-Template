@@ -83,7 +83,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1.8.1
         id: render_sidecar_task_definition
         with:
-          task-definition: ${{ inputs.task_definition_path }}
+          task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
           container-name: ${{ inputs.sidecar_container_name }}
           image: ${{ inputs.sidecar_image_url }}
       - name: Deploy Server without CodeDeploy
