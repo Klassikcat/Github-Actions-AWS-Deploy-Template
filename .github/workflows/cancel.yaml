@@ -21,20 +21,32 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: dcarbone/install-jq-action@v3.0.1
-        - uses: aws-actions/configure-aws-credentials@v2
+        - uses: aws-actions/configure-aws-credentials@v4
           with:
             role-to-assume: ${{ inputs.ROLE_TO_ASSUME }}
             audience: "sts.amazonaws.com"
-            aws-region: ap-northeast-2
+            aws-region: ${{ vars.AWS_REGION || 'ap-northeast-2' }}
         - run: |
-            deployment_id=$(aws deploy list-deployments --application-name ${{ inputs.application_name }} --deployment-group-name ${{ inputs.deployment_group_name }} --include-only-status InProgress Created Queued Ready --query "deployments[0]" --output text)
-            if [ "$deployment_id" != "None" ]; then
-                output=$(aws deploy stop-deployment --deployment-id $deployment_id)
-                output_result=$(echo $output | jq -r '.status')
-                if [ "$output_result" != "Succeeded" ]; then
+            set -euo pipefail
+
+            deployment_id=$(aws deploy list-deployments \
+              --application-name "${{ inputs.application_name }}" \
+              --deployment-group-name "${{ inputs.deployment_group_name }}" \
+              --include-only-status InProgress Created Queued Ready \
+              --query "deployments[0]" \
+              --output text)
+
+            if [ "$deployment_id" = "None" ] || [ "$deployment_id" = "null" ]; then
+                echo "Either no deployment created or deployment already completed."
+                exit 0
+            fi
+
+            output=$(aws deploy stop-deployment --deployment-id "$deployment_id")
+            output_result=$(echo "$output" | jq -r '.status')
+
+            if [ "$output_result" != "Succeeded" ]; then
                 echo "Deployment Status: $output_result"
                 exit 1
-                fi
-            else
-                echo "Either no deployment created or Deployment Succeed/Failed."
             fi
+          shell: bash
+

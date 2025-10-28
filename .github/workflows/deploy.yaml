@@ -44,6 +44,7 @@ on:
         required: true
 env:
   AWS_AUDIENCE: "sts.amazonaws.com"
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-2' }}
 permissions:
   contents: read
   packages: write
@@ -70,7 +71,7 @@ jobs:
         with:
           role-to-assume: ${{ inputs.aws_role_to_assume }}
           audience: ${{ env.AWS_AUDIENCE }}
-          aws-region: ap-northeast-2
+          aws-region: ${{ env.AWS_REGION }}
       - name: Render Task Defintion
         uses: aws-actions/amazon-ecs-render-task-definition@v1.8.1
         id: render_task_definition
