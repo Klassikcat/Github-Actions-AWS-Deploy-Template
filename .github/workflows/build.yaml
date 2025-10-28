@@ -56,10 +56,11 @@ jobs:
       - name: Set multi-arch if multi-arch is true
         id: arch
         run: |
-          if [ ${{ inputs.MULTI_ARCH }} = "true" ]; then
-            echo "PLATFORMS=linux/arm64,linux/amd64" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          if [[ "${{ inputs.MULTI_ARCH }}" == 'true' ]]; then
+            echo "PLATFORMS=linux/arm64,linux/amd64" >> "$GITHUB_OUTPUT"
           else
-            echo "PLATFORMS=linux/amd64" >> $GITHUB_OUTPUT
+            echo "PLATFORMS=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
       - name: Checkout repository
         uses: actions/checkout@v4

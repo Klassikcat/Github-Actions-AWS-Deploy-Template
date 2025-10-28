@@ -68,26 +68,28 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: dcarbone/install-jq-action@v3.0.1
-        - uses: actions/setup-python@v3
+        - uses: actions/setup-python@v5
         - uses: aws-actions/setup-sam@v1
         - uses: actions/checkout@v4
           with:
             sparse-checkout: ${{ inputs.prefix }}/${{ matrix.name }}
-        - uses: aws-actions/configure-aws-credentials@v2
+        - uses: aws-actions/configure-aws-credentials@v4
           with:
             role-to-assume: ${{ inputs.ROLE_TO_ASSUME }}
             audience: "sts.amazonaws.com"
             aws-region: ${{ inputs.REGION }}
         - run: |
+            set -euo pipefail
             echo "Deploying ${{ matrix.name }} to ${{ inputs.ENV }} in ${{ inputs.REGION }}/${{ inputs.ACCOUNT_ID }}"
-            cd ${{ inputs.prefix }}/${{ matrix.name }}
+            cd "${{ inputs.prefix }}/${{ matrix.name }}"
             sam deploy \
-                --template-file ${{ inputs.template_file_path }} \
-                --region ${{ inputs.REGION }} \
-                --config-env ${{ inputs.ENV }} \
-                --config-file ${{ inputs.samconfig_file_path }} \
+                --template-file "${{ inputs.template_file_path }}" \
+                --region "${{ inputs.REGION }}" \
+                --config-env "${{ inputs.ENV }}" \
+                --config-file "${{ inputs.samconfig_file_path }}" \
                 --no-confirm-changeset \
                 --no-fail-on-empty-changeset
+          shell: bash
     deploy_lambda_with_docker:
         if: ${{ inputs.use_ecr_repo }}
         name: ${{ matrix.name }}-deploy
@@ -98,25 +100,27 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: dcarbone/install-jq-action@v3.0.1
-        - uses: actions/setup-python@v3
+        - uses: actions/setup-python@v5
         - uses: aws-actions/setup-sam@v1
         - uses: actions/checkout@v4
           with:
             sparse-checkout: ${{ inputs.prefix }}/${{ matrix.name }}
-        - uses: aws-actions/configure-aws-credentials@v2
+        - uses: aws-actions/configure-aws-credentials@v4
           with:
             role-to-assume: ${{ inputs.ROLE_TO_ASSUME }}
             audience: "sts.amazonaws.com"
             aws-region: ${{ inputs.REGION }}
         - run: |
+            set -euo pipefail
             echo "Deploying ${{ matrix.name }} to ${{ inputs.ENV }} in ${{ inputs.REGION }}/${{ inputs.ACCOUNT_ID }}"
-            cd ${{ inputs.prefix }}/${{ matrix.name }}
+            cd "${{ inputs.prefix }}/${{ matrix.name }}"
             sam deploy \
-                --template-file ${{ inputs.template_file_path }} \
-                --region ${{ inputs.REGION }} \
-                --config-env ${{ inputs.ENV }} \
-                --config-file ${{ inputs.samconfig_file_path }} \
+                --template-file "${{ inputs.template_file_path }}" \
+                --region "${{ inputs.REGION }}" \
+                --config-env "${{ inputs.ENV }}" \
+                --config-file "${{ inputs.samconfig_file_path }}" \
                 --no-confirm-changeset \
                 --no-fail-on-empty-changeset \
                 --parameter-overrides="Stage=\"${{ inputs.ENV }}\" Tag=\"${{ github.sha }}\""
+          shell: bash
 
