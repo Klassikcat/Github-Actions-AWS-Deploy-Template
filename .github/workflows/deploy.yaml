@@ -39,7 +39,7 @@ on:
         type: string
         required: false
       use_codedeploy:
-        description: "Legacy support placeholder"
+        description: "Legacy compatibility flag for older CodeDeploy-based callers; currently kept for backward-compatible workflow inputs."
         type: boolean
         required: true
 env:
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.repository }}
           sparse-checkout: |
@@ -66,13 +66,13 @@ jobs:
         uses: unfor19/install-aws-cli-action@v1
         with:
           arch: amd64
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ inputs.aws_role_to_assume }}
           audience: ${{ env.AWS_AUDIENCE }}
           aws-region: ap-northeast-2
       - name: Render Task Defintion
-        uses: aws-actions/amazon-ecs-render-task-definition@v1.8.1
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.8.4
         id: render_task_definition
         with:
           task-definition: ${{ inputs.task_definition_path }}
@@ -80,14 +80,14 @@ jobs:
           image: ${{ inputs.image_url }}
       - name: Render Sidecar Task Defintion
         if: ${{ inputs.use_sidecar }}
-        uses: aws-actions/amazon-ecs-render-task-definition@v1.8.1
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.8.4
         id: render_sidecar_task_definition
         with:
           task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
           container-name: ${{ inputs.sidecar_container_name }}
           image: ${{ inputs.sidecar_image_url }}
       - name: Deploy Server without CodeDeploy
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.6.1
         if: ${{ !inputs.use_sidecar }}
         with:
           service: ${{ inputs.service_name }}
@@ -95,7 +95,7 @@ jobs:
           task-definition: ${{ steps.render_task_definition.outputs.task-definition }}
           wait-for-service-stability: true
       - name: Deploy Server without CodeDeploy
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.6.1
         if: ${{ inputs.use_sidecar }}
         with:
           service: ${{ inputs.service_name }}
