@@ -19,7 +19,7 @@ jobs:
             ROLE_TO_ASSUME: ${{ steps.set_role_to_assume.outputs.ROLE_TO_ASSUME }}
             STAGE: ${{ steps.set_stage.outputs.STAGE }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                 fetch-depth: 4
             - name: Find Changed Files
